@@ -1,13 +1,59 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
+import React from 'react'
+import ReactDOM from 'react-dom'
+import {createStore} from 'redux'
+import {Provider} from "react-redux"
+import {SnackbarProvider} from "notistack"
+import * as serviceWorker from './serviceWorker'
+import allReducers from "./redusers"
+
+import {addEvent} from "./actions/actionCreator"
+
 import App from './App';
-import * as serviceWorker from './serviceWorker';
+
+import './index.css';
+
+const store = createStore(
+    allReducers,
+    window.__REDUX_DEVTOOLS_EXTENSION__ &&
+    window.__REDUX_DEVTOOLS_EXTENSION__()
+);
+
+export default store;
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js',{scope: '/'})
+            .then(registration => {
+                console.log('SW registered!!!');
+                // registration.pushManager.subscribe({userVisibleOnly: true});
+            })
+            .catch(registrationError => {
+                console.log('SW registration failed: ', registrationError);
+            })
+    });
+} else {
+    console.log('Текущий браузер не поддерживает service worker-ы.');
+}
+
+window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    store.dispatch(addEvent(e));
+});
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <Provider store={store}>
+        <SnackbarProvider
+            maxSnack={5}
+            anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+            }}
+            hideIconVariant={false}
+            preventDuplicate
+        >
+            <App/>
+        </SnackbarProvider>
+    </Provider>,
   document.getElementById('root')
 );
 
